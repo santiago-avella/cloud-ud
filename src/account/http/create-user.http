@@ -1,0 +1,13 @@
+POST http://localhost:3000/api/account/register/
+Content-Type: application/json
+
+{
+    "email": "jose@example.com",
+    "password": "secur",
+    "info_account": {
+        "first_name": "Jose",
+        "last_name": "Garcia",
+        "phone": "+34123456789"
+    }
+}
+
