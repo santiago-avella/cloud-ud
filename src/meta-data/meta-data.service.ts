@@ -14,11 +14,15 @@ export class MetaDataService {
 
     async createFileMetaData(file_metadata: MetadataBase){
         const metadata = new this.fileMetaDataModel(file_metadata)
-        console.log(metadata)
         try {
             await metadata.save()
         } catch (error) {
             throw new BadRequestException(error)
         }
+    }
+
+    async getMetadataFileId(metadata_file_id: string){
+        const metadata_file = await this.fileMetaDataModel.findOne({reference_file_id: metadata_file_id})
+        return metadata_file
     }
 }

@@ -1,4 +1,5 @@
-import { PutObjectCommand, S3, S3Client } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, S3, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException, Injectable, InternalServerErrorException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import {v4 as uuidv4} from 'uuid'
@@ -22,6 +23,21 @@ export class AwsBucketS3 {
                 secretAccessKey: this.configService.get('AWS_SECRET_ACCESS_KEY') ?? '',
             },
         })
+    }
+
+    public async getPresignedSingedUrl(key: string){
+        try {
+            const command = new GetObjectCommand({
+                Key: key,
+                Bucket: this.s3_bucket_name
+            })
+            const url = await getSignedUrl(this.client, command, {
+                expiresIn: 600 // tiempo de expiracion en segundos
+            })
+            return url
+        } catch (error) {
+            throw new BadRequestException('error en recuperar el archivo')
+        }
     }
 
 

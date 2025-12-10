@@ -15,6 +15,7 @@ import { FileFolderService } from 'src/file-folder/file-folder.service';
 import { BucketS3Service } from 'src/bucket-s3/bucket-s3.service';
 import { CreateFolderDto } from './dtos/create-folder.dto';
 import { MetaDataService } from 'src/meta-data/meta-data.service';
+import { find } from 'rxjs';
 
 @Injectable()
 export class StorageService {
@@ -39,22 +40,23 @@ export class StorageService {
             }
         })
         if (!space_storage || space_storage.status === StatusStorageEnum.BLOCK) throw new BadRequestException('El espacio de almacenamiento esta bloqueado o no existe')
+        space_storage.storage_plan.storage_capacity = Number(space_storage.storage_plan.storage_capacity)
         return space_storage
     }
 
 
     public async uploadFile(file: Express.Multer.File, idAccount: string, uploadFileDto: UploadFileDto) {
-        //const { id_space } = await this.validators(file, idAccount, uploadFileDto)
-        //const {key} = await this.bucketS3Service.uploadFile(file)
+        const { id_space } = await this.validators(file, idAccount, uploadFileDto)
+        const {key} = await this.bucketS3Service.uploadFile(file)
         const metadata = await this.extractMetadatProvider.extractMetadata(file)
-        /*await this.fileFolderService.createFile({
+        await this.fileFolderService.createFile({
             id: key,
             name: file.originalname.split('.')[0],
             size: file.size,
             folder_id: uploadFileDto.parent_folder_id
-        })*/
-        //await this.calculateBalanceStorage(idAccount, file.size)
-        await this.metadataService.createFileMetaData({...metadata, reference_file_id: '3'})
+        })
+        await this.calculateBalanceStorage(idAccount, file.size)
+        await this.metadataService.createFileMetaData({...metadata, reference_file_id: key})
         return {
             success: true,
             message: 'Archivo guardado correctamente'
@@ -73,7 +75,7 @@ export class StorageService {
 
     private async validators(file: Express.Multer.File, idAccount: string, uploadFileDto: UploadFileDto) {
         const { size, mimetype } = file
-        const folder = await this.fileFolderService.getFolder(uploadFileDto.parent_folder_id)
+        const folder = await this.fileFolderService.getFolder(uploadFileDto.parent_folder_id, idAccount)
         const { max_file_size, mime_types_allowed } = RulesUpload
         const { space_avaible, id_space } = await this.getBalanceStorage(idAccount)
         if (file.size > space_avaible) throw new BadRequestException(`El archivo excede la capacidad de su almacenamiento`)
@@ -84,9 +86,9 @@ export class StorageService {
     }
 
     public async getBalanceStorage(idAccount: string) {
-        const { id, ocuppation, storage_plan: { storage_capacity } } = await this.getSpaceForAccount(idAccount)
+        const { id, ocuppation, storage_plan: { storage_capacity }, status} = await this.getSpaceForAccount(idAccount)
         const space_avaible = storage_capacity - ocuppation
-        return { space_avaible, storage_capacity, id_space: id }
+        return {space_avaible, storage_capacity, id_space: id, status}
     }
 
 
@@ -108,6 +110,44 @@ export class StorageService {
     public async createFolder(createfolderDto: CreateFolderDto, idAccount: string){
         const space = await this.getSpaceForAccount(idAccount)
         return this.fileFolderService.createFolder(createfolderDto, space.id)
+    }
+
+
+    public async getStorageUser(userId: string){
+        const space = await this.getSpaceForAccount(userId)
+        const folders = await this.fileFolderService.getAllFolders(space.id)
+        return folders
+    }
+
+
+    public async getFolderContent(folderId: string, userId: string){
+        const folder = await this.fileFolderService.getFolder(folderId, userId)
+        if(!folder) throw new NotFoundException('No se encontro la carpeta')
+        return folder
+    }
+
+
+    public async getUrlFile(userId: string, fileId: string){
+        const space = await this.getSpaceForAccount(userId)
+        const find_file = await this.fileFolderService.findFile(space.id, fileId)
+        if (!find_file) throw new NotFoundException('No se encontro el archivo')
+        const url_file_presigned = await this.bucketS3Service.getUrlFile(find_file.id)  
+        return url_file_presigned
+    }   
+
+
+    public async getMetadataFile(userId: string, fileId: string){
+        const space = await this.getSpaceForAccount(userId)
+        const find_file = await this.fileFolderService.findFile(space.id, fileId)
+        if(!find_file) throw new NotFoundException('El archivo no existe')
+        return this.metadataService.getMetadataFileId(find_file.id)
+    }
+
+
+    public async getInfoStorageForAccount(userId: string){
+        const info_storage =  await this.getBalanceStorage(userId)
+        const info_files_folders = await this.fileFolderService.getInfoFileFolder(info_storage.id_space)
+        return {...info_storage, ...info_files_folders}
     }
 
 }

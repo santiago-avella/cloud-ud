@@ -41,6 +41,6 @@ export class Folder{
     })
     hide: Boolean
 
-    @OneToMany(() => File, (File) => File.id)
+    @OneToMany(() => File, (file) => file.folder)
     files: File[]
 }
