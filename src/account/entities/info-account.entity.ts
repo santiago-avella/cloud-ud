@@ -1,16 +1,17 @@
-import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
 import { Account } from "./account.entity";
-import { join } from "path";
 
 @Entity()
-export class InfoAccount {
-    @PrimaryColumn()
-    @OneToOne(() => Account, account => account.info_account)
+export class InfoAccount{
+    @PrimaryGeneratedColumn()
+    id: string
+
+    @OneToOne(() => Account, (account) => account.info_account)
     @JoinColumn({
         name: 'account_id',
         referencedColumnName: 'id'
     })
-    account_id: string;
+    account: Account;
 
     @Column({
         type: 'varchar',

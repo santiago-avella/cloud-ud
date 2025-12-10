@@ -1,13 +1,10 @@
-import { Column, CreateDateColumn, Entity, OneToOne, PrimaryColumn, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, OneToOne, PrimaryColumn, PrimaryGeneratedColumn} from "typeorm";
 import { InfoAccount } from "./info-account.entity";
+import { StatusAccount } from "../enums/status-account.enum";
 
 @Entity()
 export class Account{
-    @PrimaryColumn({
-        type: 'varchar',
-        length: 100,
-        nullable: false
-    })
+    @PrimaryGeneratedColumn('uuid')
     id : string;
 
     @Column({
@@ -20,7 +17,7 @@ export class Account{
 
     @Column({
         type: 'varchar',
-        length: 30,
+        length: 100,
         nullable: false
     })
     password: string;
@@ -28,13 +25,13 @@ export class Account{
     @Column({
         type: 'varchar',
         length: 10,
-        nullable: false
+        default: StatusAccount.ACTIVE
     })
     status: string;
 
     @CreateDateColumn()
     created_at: Date;
 
-    @OneToOne(() => InfoAccount, (InfoAccountEntity) => InfoAccountEntity.account_id)
+    @OneToOne(() => InfoAccount)
     info_account: InfoAccount;
 }

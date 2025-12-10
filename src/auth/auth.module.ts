@@ -5,13 +5,14 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BcryptProvider } from './providers/bcrypt.provider';
 import { AccountModule } from 'src/account/account.module';
+import { JwtGuard } from './guards/jwt.guard';
 
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, BcryptProvider],
-  exports: [AuthService, BcryptProvider],
-  imports: [forwardRef(() => AccountModule),
+  providers: [AuthService, BcryptProvider, JwtGuard],
+  exports: [AuthService, BcryptProvider, JwtGuard, JwtModule],
+  imports: [ConfigModule, forwardRef(() => AccountModule),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

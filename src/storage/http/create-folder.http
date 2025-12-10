@@ -1,0 +1,8 @@
+POST http://localhost:3000/api/storage/folder/
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImRmZmY3NmRiLWQzNmMtNDhhMC04ZGJiLTFhYWQyZGI0Y2E4OSIsImlhdCI6MTc2NTI1MzkwMSwiZXhwIjoxNzY1MjU3NTAxfQ.OUVXi3_cK5qYUlgQ2U-B1_9rxOW4bnI9FYyhVWjKo9o
+
+{
+    "name": "NewFolder",
+    "parent_id": "0e239ab4-d6b8-4d46-a6ac-b7cde5242da7"
+}

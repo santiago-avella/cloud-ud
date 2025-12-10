@@ -16,13 +16,13 @@ export class AuthService {
 
 
     public async login(loginDto: LoginDto){
-        const user = await this.accountService.getAccountByEmail(loginDto.email)
+        const user = await this.accountService.getAccount(loginDto.email)
         if (!user) throw new NotFoundException('Email no encontrado')
         
-        const checkPassword = await this.bcryptProvider.comparePassword(user.password, loginDto.password)
+        const checkPassword = await this.bcryptProvider.comparePassword(loginDto.password, user.password)
         if(!checkPassword) throw new BadRequestException('Password incorrecto para el email')
 
-        const token = this.jwtService.sign({id: user})
+        const token = this.jwtService.sign({id: user.id})
         return {
             message: 'Inicio de sesion correcto',
             token: token
